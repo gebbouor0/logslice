@@ -1,51 +1,44 @@
-from __future__ import annotations
+"""Line formatting with configurable options."""
 from dataclasses import dataclass
 from typing import List, Optional
 from logslice.parser import LogLine
 
 
-_LEVEL_COLORS = {
-    "ERROR": "\033[31m",
-    "WARN": "\033[33m",
-    "WARNING": "\033[33m",
-    "INFO": "\033[32m",
-    "DEBUG": "\033[36m",
-}
-_RESET = "\033[0m"
-
-
 @dataclass
 class FormatOptions:
-    show_line_numbers: bool = False
-    show_timestamps: bool = True
-    colorize_levels: bool = False
-    timestamp_fmt: str = "%Y-%m-%d %H:%M:%S"
-    separator: str = " | "
+    show_line_number: bool = True
+    show_timestamp: bool = True
+    timestamp_format: str = "%Y-%m-%d %H:%M:%S"
+    prefix: str = ""
+    max_message_length: Optional[int] = None
+    ellipsis: str = "..."
 
 
 def format_line(line: LogLine, opts: Optional[FormatOptions] = None) -> str:
-    """Format a single LogLine into a human-readable string."""
     if opts is None:
         opts = FormatOptions()
 
-    parts: List[str] = []
+    parts = []
 
-    if opts.show_line_numbers and line.line_number is not None:
+    if opts.prefix:
+        parts.append(opts.prefix)
+
+    if opts.show_line_number:
         parts.append(f"[{line.line_number}]")
 
-    if opts.show_timestamps and line.timestamp is not None:
-        parts.append(line.timestamp.strftime(opts.timestamp_fmt))
+    if opts.show_timestamp:
+        if line.timestamp is not None:
+            parts.append(line.timestamp.strftime(opts.timestamp_format))
+        else:
+            parts.append("(no timestamp)")
 
-    if line.level:
-        level_str = line.level.upper()
-        if opts.colorize_levels and level_str in _LEVEL_COLORS:
-            level_str = f"{_LEVEL_COLORS[level_str]}{level_str}{_RESET}"
-        parts.append(level_str)
+    msg = line.message
+    if opts.max_message_length is not None and len(msg) > opts.max_message_length:
+        msg = msg[:opts.max_message_length] + opts.ellipsis
 
-    parts.append(line.message)
-    return opts.separator.join(parts)
+    parts.append(msg)
+    return " ".join(parts)
 
 
 def format_lines(lines: List[LogLine], opts: Optional[FormatOptions] = None) -> List[str]:
-    """Format multiple LogLines."""
     return [format_line(line, opts) for line in lines]
