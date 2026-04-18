@@ -1,67 +1,46 @@
 # logslice
 
-> CLI tool to extract and filter log segments by time range and pattern
+CLI tool to extract and filter log segments by time range and pattern.
 
----
+## Features
 
-## Installation
-
-```bash
-pip install logslice
-```
-
-Or install from source:
-
-```bash
-git clone https://github.com/yourname/logslice.git && cd logslice && pip install .
-```
-
----
+- **Parse** log lines with timestamps and messages
+- **Filter** by time range (start/end) and pattern matching
+- **Highlight** patterns with color in terminal output
+- **Stats** — count lines, levels, and timestamp ranges
+- **Export** to text, JSON, or CSV
+- **Deduplicate** consecutive repeated lines
+- **Chunk** logs by size or time interval
+- **Sample** logs every nth line or randomly
+- **Merge** multiple log streams in chronological order
+- **Annotate** lines with tags based on rules
+- **Paginate** output for large log files
+- **Diff** two log streams to find added/removed lines
+- **Truncate** long log messages
+- **Group** lines by level, hour, or custom field
 
 ## Usage
 
 ```bash
-logslice [OPTIONS] <logfile>
+logslice --start "2024-01-01T10:00" --end "2024-01-01T11:00" --pattern ERROR app.log
 ```
 
-### Examples
+## Modules
 
-Extract log entries between two timestamps:
-
-```bash
-logslice --start "2024-01-15 08:00:00" --end "2024-01-15 09:00:00" app.log
-```
-
-Filter by pattern within a time range:
-
-```bash
-logslice --start "2024-01-15 08:00:00" --end "2024-01-15 09:00:00" --pattern "ERROR" app.log
-```
-
-Write output to a file:
-
-```bash
-logslice --start "2024-01-15 08:00:00" --pattern "WARN" app.log -o output.log
-```
-
-### Options
-
-| Flag | Description |
-|------|-------------|
-| `--start` | Start of time range (inclusive) |
-| `--end` | End of time range (inclusive) |
-| `--pattern` | Regex or string pattern to filter lines |
-| `-o, --output` | Write results to a file instead of stdout |
-| `--format` | Timestamp format (default: `%Y-%m-%d %H:%M:%S`) |
-
----
-
-## Requirements
-
-- Python 3.8+
-
----
-
-## License
-
-This project is licensed under the [MIT License](LICENSE).
+| Module | Description |
+|---|---|
+| `parser` | Parse raw log lines into structured `LogLine` objects |
+| `filter` | Filter and format log lines by time and pattern |
+| `highlighter` | Colorize pattern matches in output |
+| `stats` | Compute summary statistics over log lines |
+| `reporter` | Build structured reports from stats |
+| `exporter` | Export lines to text, JSON, CSV |
+| `deduplicator` | Collapse consecutive duplicate lines |
+| `chunker` | Split logs into chunks by size or time |
+| `sampler` | Sample lines by interval or randomly |
+| `merger` | Merge multiple streams chronologically |
+| `annotator` | Tag lines with labels based on regex rules |
+| `paginator` | Paginate lines into pages |
+| `differ` | Diff two log streams |
+| `truncator` | Truncate long messages |
+| `grouper` | Group lines by level, hour, or custom key |
