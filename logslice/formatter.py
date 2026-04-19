@@ -1,3 +1,4 @@
+"""Formatting utilities for log lines."""
 from dataclasses import dataclass
 from typing import List, Optional
 from logslice.parser import LogLine
@@ -5,31 +6,33 @@ from logslice.parser import LogLine
 
 @dataclass
 class FormatOptions:
-    show_line_numbers: bool = True
-    show_timestamps: bool = True
-    timestamp_format: str = "%Y-%m-%d %H:%M:%S"
+    show_line_number: bool = True
+    show_timestamp: bool = True
+    timestamp_format: str = "%Y-%m-%dT%H:%M:%S"
     separator: str = " | "
+    max_message_length: Optional[int] = None
 
 
-def format_line(log_line: LogLine, options: Optional[FormatOptions] = None) -> str:
-    if options is None:
-        options = FormatOptions()
+def format_line(line: LogLine, options: Optional[FormatOptions] = None) -> str:
+    opts = options or FormatOptions()
+    parts: List[str] = []
 
-    parts = []
+    if opts.show_line_number and line.line_number is not None:
+        parts.append(f"[{line.line_number}]")
 
-    if options.show_line_numbers and log_line.line_number is not None:
-        parts.append(f"#{log_line.line_number}")
-
-    if options.show_timestamps:
-        if log_line.timestamp is not None:
-            parts.append(log_line.timestamp.strftime(options.timestamp_format))
+    if opts.show_timestamp:
+        if line.timestamp:
+            parts.append(line.timestamp.strftime(opts.timestamp_format))
         else:
             parts.append("(no timestamp)")
 
-    parts.append(log_line.message)
+    msg = line.message
+    if opts.max_message_length and len(msg) > opts.max_message_length:
+        msg = msg[: opts.max_message_length] + "..."
+    parts.append(msg)
 
-    return options.separator.join(parts)
+    return opts.separator.join(parts)
 
 
-def format_lines(log_lines: List[LogLine], options: Optional[FormatOptions] = None) -> List[str]:
-    return [format_line(line, options) for line in log_lines]
+def format_lines(lines: List[LogLine], options: Optional[FormatOptions] = None) -> List[str]:
+    return [format_line(line, options) for line in lines]
