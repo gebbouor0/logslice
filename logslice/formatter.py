@@ -1,33 +1,30 @@
-"""Format LogLine objects for display output."""
-from __future__ import annotations
-from dataclasses import dataclass
+"""Format log lines for display."""
+from dataclasses import dataclass, field
 from typing import List, Optional
 from logslice.parser import LogLine
-
-DEFAULT_TS_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
 
 @dataclass
 class FormatOptions:
     show_line_numbers: bool = True
     show_timestamps: bool = True
-    ts_format: str = DEFAULT_TS_FORMAT
+    timestamp_format: str = "%Y-%m-%d %H:%M:%S"
     separator: str = " | "
 
 
-def format_line(line: LogLine, opts: Optional[FormatOptions] = None) -> str:
-    opts = opts or FormatOptions()
-    parts: List[str] = []
-    if opts.show_line_numbers and line.line_number is not None:
-        parts.append(f"[{line.line_number}]")
+def format_line(line: LogLine, options: Optional[FormatOptions] = None) -> str:
+    opts = options or FormatOptions()
+    parts = []
+    if opts.show_line_numbers:
+        parts.append(f"{line.line_number:>6}")
     if opts.show_timestamps:
-        if line.timestamp is not None:
-            parts.append(line.timestamp.strftime(opts.ts_format))
+        if line.timestamp:
+            parts.append(line.timestamp.strftime(opts.timestamp_format))
         else:
             parts.append("(no timestamp)")
-    parts.append(line.message or line.raw)
+    parts.append(line.message)
     return opts.separator.join(parts)
 
 
-def format_lines(lines: List[LogLine], opts: Optional[FormatOptions] = None) -> List[str]:
-    return [format_line(l, opts) for l in lines]
+def format_lines(lines: List[LogLine], options: Optional[FormatOptions] = None) -> List[str]:
+    return [format_line(line, options) for line in lines]
