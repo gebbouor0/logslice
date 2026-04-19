@@ -1,4 +1,3 @@
-"""Format log lines for display with configurable options."""
 from dataclasses import dataclass
 from typing import List, Optional
 from logslice.parser import LogLine
@@ -10,29 +9,27 @@ class FormatOptions:
     show_timestamps: bool = True
     timestamp_format: str = "%Y-%m-%d %H:%M:%S"
     separator: str = " | "
-    max_message_length: Optional[int] = None
 
 
-def format_line(line: LogLine, options: Optional[FormatOptions] = None) -> str:
-    opts = options or FormatOptions()
+def format_line(log_line: LogLine, options: Optional[FormatOptions] = None) -> str:
+    if options is None:
+        options = FormatOptions()
+
     parts = []
 
-    if opts.show_line_numbers:
-        parts.append(f"[{line.line_number}]")
+    if options.show_line_numbers and log_line.line_number is not None:
+        parts.append(f"#{log_line.line_number}")
 
-    if opts.show_timestamps:
-        if line.timestamp is not None:
-            parts.append(line.timestamp.strftime(opts.timestamp_format))
+    if options.show_timestamps:
+        if log_line.timestamp is not None:
+            parts.append(log_line.timestamp.strftime(options.timestamp_format))
         else:
             parts.append("(no timestamp)")
 
-    msg = line.message
-    if opts.max_message_length and len(msg) > opts.max_message_length:
-        msg = msg[: opts.max_message_length] + "..."
-    parts.append(msg)
+    parts.append(log_line.message)
 
-    return opts.separator.join(parts)
+    return options.separator.join(parts)
 
 
-def format_lines(lines: List[LogLine], options: Optional[FormatOptions] = None) -> List[str]:
-    return [format_line(line, options) for line in lines]
+def format_lines(log_lines: List[LogLine], options: Optional[FormatOptions] = None) -> List[str]:
+    return [format_line(line, options) for line in log_lines]
