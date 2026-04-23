@@ -24,6 +24,15 @@ class ProfileResult:
 
 
 def profile_lines(lines: List[LogLine]) -> ProfileResult:
+    """Compute profile statistics for a list of log lines.
+
+    Args:
+        lines: Parsed log lines to analyse.
+
+    Returns:
+        A ProfileResult with aggregate metrics such as message length
+        statistics, timestamp coverage, and throughput.
+    """
     if not lines:
         return ProfileResult(
             total_lines=0,
@@ -63,6 +72,7 @@ def profile_lines(lines: List[LogLine]) -> ProfileResult:
 
 
 def format_profile(result: ProfileResult) -> str:
+    """Format a ProfileResult as a human-readable string."""
     lines = [
         f"Total lines       : {result.total_lines}",
         f"With timestamp    : {result.lines_with_timestamp} ({result.timestamp_coverage:.1%})",
