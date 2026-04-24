@@ -20,6 +20,11 @@ class RedactedLine:
     def line_number(self) -> Optional[int]:
         return self.original.line_number
 
+    @property
+    def was_redacted(self) -> bool:
+        """Return True if any patterns matched and content was redacted."""
+        return len(self.matched_patterns) > 0
+
 
 DEFAULT_PLACEHOLDER = "[REDACTED]"
 
@@ -39,7 +44,10 @@ def redact_message(
     matched: List[str] = []
     result = message
     for pat in patterns:
-        compiled = re.compile(pat)
+        try:
+            compiled = re.compile(pat)
+        except re.error as e:
+            raise ValueError(f"Invalid redaction pattern {pat!r}: {e}") from e
         if compiled.search(result):
             matched.append(pat)
             result = compiled.sub(placeholder, result)
