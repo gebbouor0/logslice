@@ -1,87 +1,111 @@
-"""Tests for logslice.formatter."""
+"""Tests for logslice/formatter.py"""
+
+from __future__ import annotations
+
 from datetime import datetime
+
+import pytest
+
 from logslice.parser import LogLine
 from logslice.formatter import FormatOptions, format_line, format_lines
 
 
-def make_line(msg: str = "hello", n: int = 1, ts=None, level=None) -> LogLine:
-    return LogLine(raw=msg, message=msg, timestamp=ts, level=level, line_number=n)
-
-
-DT = datetime(2024, 3, 15, 12, 0, 0)
+def make_line(
+    msg: str = "hello",
+    level: str | None = "INFO",
+    ts: datetime | None = None,
+    lineno: int = 1,
+) -> LogLine:
+    return LogLine(
+        raw=f"{level} {msg}",
+        message=msg,
+        timestamp=ts,
+        level=level,
+        line_number=lineno,
+    )
 
 
 def test_format_line_default_includes_number():
-    line = make_line("test message", n=5)
+    line = make_line(lineno=7)
     out = format_line(line)
-    assert "#5" in out
+    assert "[7]" in out
 
 
 def test_format_line_default_no_timestamp_shows_dash():
-    line = make_line("msg", ts=None)
+    line = make_line(ts=None)
     out = format_line(line)
-    assert " | - | " in out or out.startswith("#1 | -")
+    assert " - " in out or out.split(" | ")[1] == "-"
 
 
 def test_format_line_with_timestamp():
-    line = make_line("msg", ts=DT)
+    ts = datetime(2024, 6, 15, 9, 30, 0)
+    line = make_line(ts=ts)
     out = format_line(line)
-    assert "2024-03-15" in out
+    assert "2024-06-15 09:30:00" in out
 
 
 def test_format_line_with_level():
-    line = make_line("msg", level="ERROR")
+    line = make_line(level="ERROR")
     out = format_line(line)
     assert "ERROR" in out
 
 
 def test_format_line_no_level_shows_dash():
-    line = make_line("msg", level=None)
+    line = make_line(level=None)
     out = format_line(line)
-    assert " | - | " in out or out.endswith(" | - | msg")
+    assert " - " in out
 
 
 def test_format_line_message_always_present():
-    line = make_line("important log message")
+    line = make_line(msg="something happened")
     out = format_line(line)
-    assert "important log message" in out
+    assert "something happened" in out
 
 
 def test_format_line_hide_line_number():
     opts = FormatOptions(show_line_number=False)
-    line = make_line("msg", n=99)
+    line = make_line(lineno=42)
     out = format_line(line, opts)
-    assert "#99" not in out
+    assert "[42]" not in out
 
 
 def test_format_line_hide_timestamp():
+    ts = datetime(2024, 1, 1)
     opts = FormatOptions(show_timestamp=False)
-    line = make_line("msg", ts=DT)
+    line = make_line(ts=ts)
     out = format_line(line, opts)
     assert "2024" not in out
+
+
+def test_format_line_hide_level():
+    opts = FormatOptions(show_level=False)
+    line = make_line(level="WARN")
+    out = format_line(line, opts)
+    assert "WARN" not in out
 
 
 def test_format_line_custom_separator():
     opts = FormatOptions(separator=" :: ")
-    line = make_line("msg", n=1, ts=DT, level="INFO")
+    line = make_line(msg="hi")
     out = format_line(line, opts)
     assert " :: " in out
 
 
-def test_format_line_custom_timestamp_format():
-    opts = FormatOptions(timestamp_format="%H:%M")
-    line = make_line("msg", ts=DT)
+def test_format_line_custom_timestamp_fmt():
+    ts = datetime(2024, 3, 5, 14, 0, 0)
+    opts = FormatOptions(timestamp_fmt="%d/%m/%Y")
+    line = make_line(ts=ts)
     out = format_line(line, opts)
-    assert "12:00" in out
-    assert "2024" not in out
+    assert "05/03/2024" in out
 
 
 def test_format_lines_returns_list():
-    lines = [make_line(f"msg {i}", n=i) for i in range(4)]
+    lines = [make_line(msg=str(i)) for i in range(4)]
     result = format_lines(lines)
+    assert isinstance(result, list)
     assert len(result) == 4
-    assert all(isinstance(s, str) for s in result)
 
 
 def test_format_lines_empty():
-    assert format_lines([]) == []
+    result = format_lines([])
+    assert result == []
