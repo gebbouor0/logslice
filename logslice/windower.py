@@ -14,16 +14,21 @@ class Window:
     def __len__(self) -> int:
         return len(self.lines)
 
+    def is_empty(self) -> bool:
+        return len(self.lines) == 0
+
 
 def window_lines(
     lines: List[LogLine],
     interval: timedelta,
     slide: Optional[timedelta] = None,
+    skip_empty: bool = False,
 ) -> List[Window]:
     """Split lines into tumbling (or sliding) windows by timestamp.
 
     Lines without timestamps are skipped.
     If slide is None, windows are tumbling (non-overlapping).
+    If skip_empty is True, windows containing no lines are omitted.
     """
     if interval.total_seconds() <= 0:
         raise ValueError("interval must be positive")
@@ -48,7 +53,8 @@ def window_lines(
             ts: datetime = line.timestamp  # type: ignore[assignment]
             if current <= ts < end:
                 w.lines.append(line)
-        windows.append(w)
+        if not (skip_empty and w.is_empty()):
+            windows.append(w)
         current += step
 
     return windows
