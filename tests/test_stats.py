@@ -54,6 +54,16 @@ def test_compute_stats_no_timestamps():
     assert stats.latest is None
 
 
+def test_compute_stats_empty():
+    """compute_stats should handle empty input lists without errors."""
+    stats = compute_stats([], [])
+    assert stats.total == 0
+    assert stats.matched == 0
+    assert stats.earliest is None
+    assert stats.latest is None
+    assert len(stats.levels) == 0
+
+
 def test_extract_level_known():
     line = make_line("2024-01-01 WARN disk space low")
     assert _extract_level(line) == "WARN"
